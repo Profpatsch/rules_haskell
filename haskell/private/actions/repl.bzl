@@ -118,9 +118,14 @@ def build_haskell_repl(
     # `-XOverloadedStrings`.
     args += hs.toolchain.compiler_flags + compiler_flags + hs.toolchain.repl_ghci_args + repl_ghci_args
 
+    # TODO: hs.actions.write(
+    # TODO: This is not relative to the source directory :(
+    print("PATH: {}".format(hs.tools.ghci.short_path))
+    print("ROOT: {}".format(hs.tools.ghci.root.path))
     hs.actions.expand_template(
         template = ghci_repl_wrapper,
         output = repl_file,
+
         substitutions = {
             "{LDLIBPATH}": get_external_libs_path(
                 set.union(
@@ -129,8 +134,8 @@ def build_haskell_repl(
                 ),
                 prefix = "$RULES_HASKELL_EXEC_ROOT",
             ),
-            "{GHCi}": hs.tools.ghci.path,
-            "{SCRIPT_LOCATION}": output.path,
+            "{GHCi}": hs.tools.ghci.short_path,
+            # "{SCRIPT_LOCATION}": output.path,
             "{ARGS}": " ".join([shell.quote(a) for a in args]),
         },
         is_executable = True,

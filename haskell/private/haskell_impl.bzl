@@ -143,7 +143,14 @@ use the 'haskell_import' rule instead.
             executable = binary,
             files = target_files,
             runfiles = ctx.runfiles(
-                files = set.to_list(solibs),
+                files = depset(
+                    transitive = [
+                        set.to_depset(solibs),
+                        depset([
+                            hs.tools.ghci
+                        ]),
+                    ],
+                ),
                 collect_data = True,
             ),
         ),
