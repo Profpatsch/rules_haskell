@@ -83,7 +83,7 @@ _haskell_common_attrs = {
     ),
     "_ghci_repl_wrapper": attr.label(
         allow_single_file = True,
-        default = Label("@io_tweag_rules_haskell//haskell:private/ghci_repl_wrapper.sh"),
+        default = Label("@io_tweag_rules_haskell//haskell:ghci_repl_wrapper"),
     ),
 }
 

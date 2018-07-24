@@ -131,7 +131,7 @@ def build_haskell_repl(
                 ),
                 prefix = "$RULES_HASKELL_EXEC_ROOT",
             ),
-            "{GHCi}": hs.tools.ghci.path,
+            "{GHCi}": hs.tools.ghci.short_path,
             "{SCRIPT_LOCATION}": output.path,
             "{ARGS}": " ".join([shell.quote(a) for a in args]),
         },
