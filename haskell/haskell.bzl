@@ -82,8 +82,9 @@ _haskell_common_attrs = {
         default = Label("@io_tweag_rules_haskell//haskell:assets/ghci_script"),
     ),
     "_ghci_repl_wrapper": attr.label(
-        allow_single_file = True,
         default = Label("@io_tweag_rules_haskell//haskell:ghci_repl_wrapper"),
+        executable = True,
+        cfg = "target",
     ),
 }
 
@@ -119,10 +120,13 @@ def _mk_binary_rule(**kwargs):
             _dummy_static_lib = attr.label(
                 default = Label("@io_tweag_rules_haskell//haskell:dummy_static_lib"),
                 allow_single_file = True,
-                doc = """
-A dummy library needed for the GHC linking process.
-""",
+                doc = "A dummy library needed for the GHC linking process.",
             ),
+            _runfiles_python_lib = attr.label(
+                default = Label("@bazel_tools//tools/python/runfiles"),
+                doc = "Runfiles lib needed for finding ghci in repl targets.",
+            ),
+
         ),
         outputs = {
             "repl": "%{name}-repl",

@@ -128,7 +128,7 @@ use the 'haskell_import' rule instead.
     build_haskell_repl(
         hs,
         ghci_script = ctx.file._ghci_script,
-        ghci_repl_wrapper = ctx.file._ghci_repl_wrapper,
+        ghci_repl_wrapper = ctx.executable._ghci_repl_wrapper,
         compiler_flags = ctx.attr.compiler_flags,
         repl_ghci_args = ctx.attr.repl_ghci_args,
         output = ctx.outputs.repl,
@@ -143,7 +143,8 @@ use the 'haskell_import' rule instead.
             executable = binary,
             files = target_files,
             runfiles = ctx.runfiles(
-                files = set.to_list(solibs),
+                files = set.to_list(solibs)
+                  + ctx.attr._runfiles_python_lib.files.to_list(),
                 collect_data = True,
             ),
         ),
@@ -298,7 +299,7 @@ use the 'haskell_import' rule instead.
         build_haskell_repl(
             hs,
             ghci_script = ctx.file._ghci_script,
-            ghci_repl_wrapper = ctx.file._ghci_repl_wrapper,
+            ghci_repl_wrapper = ctx.executable._ghci_repl_wrapper,
             repl_ghci_args = ctx.attr.repl_ghci_args,
             compiler_flags = ctx.attr.compiler_flags,
             output = ctx.outputs.repl,
@@ -311,7 +312,9 @@ use the 'haskell_import' rule instead.
     if hasattr(ctx, "runfiles"):
         default_info = DefaultInfo(
             files = target_files,
-            runfiles = ctx.runfiles(collect_data = True),
+            runfiles = ctx.runfiles(
+                files = [ hs.tools.ghci ],
+                collect_data = True),
         )
     else:
         default_info = DefaultInfo(

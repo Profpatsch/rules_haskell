@@ -181,6 +181,8 @@ _haskell_proto_aspect = aspect(
         "_ghci_repl_wrapper": attr.label(
             allow_single_file = True,
             default = Label("@io_tweag_rules_haskell//haskell:ghci_repl_wrapper"),
+            executable = True,
+            cfg = "target",
         ),
     },
     attr_aspects = ["deps"],

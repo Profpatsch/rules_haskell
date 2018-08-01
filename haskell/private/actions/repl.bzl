@@ -71,7 +71,6 @@ def build_haskell_repl(
             args += ["-l{0}".format(lib_name)]
 
     ghci_repl_script = hs.actions.declare_file(target_unique_name(hs, "ghci-repl-script"))
-    repl_file = hs.actions.declare_file(target_unique_name(hs, "repl"))
 
     add_modules = []
     if lib_info != None:
@@ -120,36 +119,70 @@ def build_haskell_repl(
     # `-XOverloadedStrings`.
     args += hs.toolchain.compiler_flags + compiler_flags + hs.toolchain.repl_ghci_args + repl_ghci_args
 
-    hs.actions.expand_template(
-        template = ghci_repl_wrapper,
-        output = repl_file,
-        substitutions = {
-            "{LDLIBPATH}": get_external_libs_path(
-                set.union(
-                    build_info.dynamic_libraries,
-                    set.from_list(build_info.external_libraries.values()),
-                ),
-                prefix = "$RULES_HASKELL_EXEC_ROOT",
-            ),
-            "{GHCi}": hs.tools.ghci.short_path,
-            "{SCRIPT_LOCATION}": output.path,
-            "{ARGS}": " ".join([shell.quote(a) for a in args]),
-        },
-        is_executable = True,
-    )
+    # hs.actions.expand_template(
+    #     template = ghci_repl_wrapper,
+    #     output = repl_file,
+    #     substitutions = {
+    #         "{LDLIBPATH}": get_external_libs_path(
+    #             set.union(
+    #                 build_info.dynamic_libraries,
+    #                 set.from_list(build_info.external_libraries.values()),
+    #             ),
+    #             prefix = "$RULES_HASKELL_EXEC_ROOT",
+    #         ),
+    #         "{GHCi}": hs.tools.ghci.short_path,
+    #         "{SCRIPT_LOCATION}": output.path,
+    #         "{ARGS}": 
+    #     },
+    #     is_executable = True,
+    # )
 
     # XXX We create a symlink here because we need to force
     # hs.tools.ghci and ghci_script and the best way to do that is
     # to use hs.actions.run. That action, it turn must produce
     # a result, so using ln seems to be the only sane choice.
-    extra_inputs = depset(transitive = [
-        depset([
-            hs.tools.ghci,
-            ghci_repl_script,
-            repl_file,
-        ]),
-        set.to_depset(build_info.package_caches),
-        depset(build_info.external_libraries.values()),
-        set.to_depset(source_files),
-    ])
-    ln(hs, repl_file, output, extra_inputs)
+    # extra_inputs = depset(transitive = [
+    #     depset([
+    #         hs.tools.ghci,
+    #         ghci_repl_script,
+    #         repl_file,
+    #     ]),
+    #     set.to_depset(build_info.package_caches),
+    #     depset(build_info.external_libraries.values()),
+    #     set.to_depset(source_files),
+    # ])
+    # ln(hs, repl_file, output, extra_inputs)
+
+    # TODO: Use the repl wrapper, silly
+    # TODO: add runfiles to this rule (maybe?)
+    # TODO: munge into a template again, maybe?
+    hs.actions.write(
+        output,
+        is_executable=True,
+        content = """#!/usr/bin/env python
+#
+import subprocess
+# Usage: ghci_repl_wrapper.py <ARGS>
+# TODO: remove when it works
+# subprocess.call(["find"])
+# subprocess.call(["env | grep "], shell=True)
+
+
+from bazel_tools.tools.python.runfiles import runfiles
+
+print("hello python")
+r = runfiles.Create()
+for f in r._strategy._runfiles:
+    print(f)
+
+ghci_path = r.Rlocation("/external/__init__.py")
+
+subprocess.call([ghci_path] + {py_arglist})
+""".format(
+            # This conversion to a python list of strings is based
+            # on the assumption that bazel strings & repr() follow the same
+            # semantics as python strings & repr() (if bazel is a true
+            # subset of python that should hold).
+            py_arglist = repr([shell.quote(a) for a in args]),
+        ),
+    )
