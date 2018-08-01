@@ -81,10 +81,9 @@ _haskell_common_attrs = {
         allow_single_file = True,
         default = Label("@io_tweag_rules_haskell//haskell:assets/ghci_script"),
     ),
-    "_ghci_repl_wrapper": attr.label(
-        default = Label("@io_tweag_rules_haskell//haskell:ghci_repl_wrapper"),
-        executable = True,
-        cfg = "target",
+    "_runfiles_bash_lib": attr.label(
+        default = Label("@bazel_tools//tools/bash/runfiles"),
+        doc = "Runfiles lib needed for finding ghci in repl targets.",
     ),
 }
 
@@ -122,11 +121,6 @@ def _mk_binary_rule(**kwargs):
                 allow_single_file = True,
                 doc = "A dummy library needed for the GHC linking process.",
             ),
-            _runfiles_python_lib = attr.label(
-                default = Label("@bazel_tools//tools/python/runfiles"),
-                doc = "Runfiles lib needed for finding ghci in repl targets.",
-            ),
-
         ),
         outputs = {
             "repl": "%{name}-repl",

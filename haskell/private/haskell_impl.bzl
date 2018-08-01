@@ -128,7 +128,6 @@ use the 'haskell_import' rule instead.
     build_haskell_repl(
         hs,
         ghci_script = ctx.file._ghci_script,
-        ghci_repl_wrapper = ctx.executable._ghci_repl_wrapper,
         compiler_flags = ctx.attr.compiler_flags,
         repl_ghci_args = ctx.attr.repl_ghci_args,
         output = ctx.outputs.repl,
@@ -144,7 +143,7 @@ use the 'haskell_import' rule instead.
             files = target_files,
             runfiles = ctx.runfiles(
                 files = set.to_list(solibs)
-                  + ctx.attr._runfiles_python_lib.files.to_list(),
+                  + ctx.attr._runfiles_bash_lib.files.to_list(),
                 collect_data = True,
             ),
         ),
@@ -299,7 +298,6 @@ use the 'haskell_import' rule instead.
         build_haskell_repl(
             hs,
             ghci_script = ctx.file._ghci_script,
-            ghci_repl_wrapper = ctx.executable._ghci_repl_wrapper,
             repl_ghci_args = ctx.attr.repl_ghci_args,
             compiler_flags = ctx.attr.compiler_flags,
             output = ctx.outputs.repl,
@@ -308,12 +306,14 @@ use the 'haskell_import' rule instead.
         )
 
     default_info = None
-
+    for file in ctx.attr._runfiles_bash_lib.files.to_list():
+        print("FILE {}".format(file))
     if hasattr(ctx, "runfiles"):
         default_info = DefaultInfo(
             files = target_files,
             runfiles = ctx.runfiles(
-                files = [ hs.tools.ghci ],
+                files = [ hs.tools.ghci ]
+                  + ctx.attr._runfiles_bash_lib.files.to_list(),
                 collect_data = True),
         )
     else:

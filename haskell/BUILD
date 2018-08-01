@@ -14,11 +14,4 @@ exports_files(
     ],
 )
 
-py_binary(
-    name = "ghci_repl_wrapper",
-    srcs = ["private/ghci_repl_wrapper.py"],
-    deps = ["@bazel_tools//tools/python/runfiles"],
-    visibility = ["//visibility:public"],
-)
-
 skylark_lint()

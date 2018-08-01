@@ -138,7 +138,6 @@ def _haskell_proto_aspect_impl(target, ctx):
         "repl_ghci_args": [],
         "version": "1.0.0",
         "_ghci_script": ctx.attr._ghci_script,
-        "_ghci_repl_wrapper": ctx.attr._ghci_repl_wrapper,
         "hidden_modules": [],
         "name": "proto-autogen-" + ctx.rule.attr.name,
         "srcs": hs_files,
@@ -177,12 +176,6 @@ _haskell_proto_aspect = aspect(
         "_ghci_script": attr.label(
             allow_single_file = True,
             default = Label("@io_tweag_rules_haskell//haskell:assets/ghci_script"),
-        ),
-        "_ghci_repl_wrapper": attr.label(
-            allow_single_file = True,
-            default = Label("@io_tweag_rules_haskell//haskell:ghci_repl_wrapper"),
-            executable = True,
-            cfg = "target",
         ),
     },
     attr_aspects = ["deps"],

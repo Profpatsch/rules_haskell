@@ -26,7 +26,6 @@ load(
 def build_haskell_repl(
         hs,
         ghci_script,
-        ghci_repl_wrapper,
         compiler_flags,
         repl_ghci_args,
         build_info,
@@ -159,30 +158,39 @@ def build_haskell_repl(
     hs.actions.write(
         output,
         is_executable=True,
-        content = """#!/usr/bin/env python
-#
-import subprocess
-# Usage: ghci_repl_wrapper.py <ARGS>
-# TODO: remove when it works
-# subprocess.call(["find"])
-# subprocess.call(["env | grep "], shell=True)
-
-
-from bazel_tools.tools.python.runfiles import runfiles
-
-print("hello python")
-r = runfiles.Create()
-for f in r._strategy._runfiles:
-    print(f)
-
-ghci_path = r.Rlocation("/external/__init__.py")
-
-subprocess.call([ghci_path] + {py_arglist})
+        content = """#!/usr/bin/env bash
+# TODO: this is a big pile of shit, replace once runfiles support is better
+# --- begin runfiles.bash initialization ---
+set -euo pipefail
+echo \$0 IS: $0
+echo \$0 W/O suffix is: ${0%-repl}
+if [[ ! -d "${RUNFILES_DIR:-/dev/null}" && ! -f "${RUNFILES_MANIFEST_FILE:-/dev/null}" ]]; then
+  if [[ -f "${0%-repl}.runfiles_manifest" ]]; then
+    export RUNFILES_MANIFEST_FILE="$0.runfiles_manifest"
+  elif [[ -f "${0%-repl}.runfiles/MANIFEST" ]]; then
+    export RUNFILES_MANIFEST_FILE="$0.runfiles/MANIFEST"
+  elif [[ -f "${0%-repl}.runfiles/bazel_tools/tools/bash/runfiles/runfiles.bash" ]]; then
+    export RUNFILES_DIR="$0.runfiles"
+  fi
+fi
+if [[ -f "${RUNFILES_DIR:-/dev/null}/bazel_tools/tools/bash/runfiles/runfiles.bash" ]]; then
+  source "${RUNFILES_DIR}/bazel_tools/tools/bash/runfiles/runfiles.bash"
+elif [[ -f "${RUNFILES_MANIFEST_FILE:-/dev/null}" ]]; then
+  source "$(grep -m1 "^bazel_tools/tools/bash/runfiles/runfiles.bash " \
+            "$RUNFILES_MANIFEST_FILE" | cut -d ' ' -f 2-)"
+else
+  find ${0%-repl}.runfiles
+  echo >&2 "ERROR: cannot find @bazel_tools//tools/bash/runfiles:runfiles.bash"
+  exit 1
+fi
+# --- end runfiles.bash initialization ---
+""" + """
+cat "$(rlocation foobar)
 """.format(
             # This conversion to a python list of strings is based
             # on the assumption that bazel strings & repr() follow the same
             # semantics as python strings & repr() (if bazel is a true
             # subset of python that should hold).
-            py_arglist = repr([shell.quote(a) for a in args]),
+            # py_arglist = repr([shell.quote(a) for a in args]),
         ),
     )
